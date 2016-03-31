@@ -16,6 +16,7 @@ class TicketingModel {
   // return _mongo.action(DTO)
   // }
   Future getAllCities(Map params) {
+    print(params);
     return _mongo.readCollectionByType(CityDTO);
   }
 
@@ -44,11 +45,17 @@ class TicketingModel {
   // The timeDTO contain a corresponding RouteDTO
   // This require 2 calls to MongoDB database
   Future getTimesByCity(Map params) async {
+
+    if (params.length == 0 ) {
+      return new List(); // return an empty list
+    }
+
     Map queryTime = {
       'arrival': params['cityArrival'],
       'departure': params['cityDepart']
     };
     // Get arrival and departure times per City
+
     List<TimeDTO> time_dtos;
     // time_dtos contains the list times for Depart_Arrival
     time_dtos = await _mongo.readCollectionByType(TimeDTO, queryTime);

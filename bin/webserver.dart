@@ -1,11 +1,13 @@
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
-import 'package:shelf_route/shelf_route.dart';
+// import 'package:shelf_route/shelf_route.dart';
+import 'package:mojito/mojito.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:path/path.dart';
 import 'package:shelf_static/shelf_static.dart';
 import 'ticketing_controler.dart' as controller;
+import 'dart:mirrors';
 
 // POST to Create
 // GET to read
@@ -21,6 +23,7 @@ Map CORSHeader = {
 Response reqHandler(Request request) {
   // The request handler is the focal point for this piece of middleware
   // all inbound requets inspect the HTTP method
+
   if (request.method == "OPTIONS") {
     // send back an immediate response with the CORS object appended to the headers
     return new Response.ok(null, headers: CORSHeader);
@@ -50,32 +53,42 @@ void main() {
   var path = Platform.script.toFilePath();
   var currentDirectory = dirname(path);
   var fullPath = join(currentDirectory, '..', 'build/web');
+  // create a static file handler
   Handler fHandler =
       createStaticHandler(fullPath, defaultDocument: 'index.html');
 
   //  Intanciate a ROUTER  Object
   Router primaryRouter = router();
+
   //any route will be prefixed by tickets
-  Router api = primaryRouter.child('/tickets');
+  // Router api = primaryRouter.child('/tickets');
   // /tickets/flight/   /tickets/cities  /tickets/times /tickets/purchase
   // test  Routes
   // curl http://localhost:8080/tickets/flight/1016
-  // curl http://localhost:8080/tickets/flight/cities
-  // curl -H "Content-Type: application/json" -X POST -d '{"cityDepart":"SFO", "cityArrival":"SAN","dateDepart":"2016-12-31","dateArrival":"2016-12-31"}' http://localhost:8080/tickets/flight/cities
+  // curl http://localhost:8080/tickets/cities
+  // curl -H "Content-Type: application/json" -X POST -d '{"cityDepart":"SFO", "cityArrival":"SAN","dateDepart":"2016-12-31","dateArrival":"2016-12-31"}' http://localhost:8082/tickets/times
   //
-  api.add('/flight/{flight}', ['GET'], controller.handleFlightNumber);
-  api.add('/cities', ['GET'], controller.handleCities);
-  api.add('/times', ['POST'], controller.handleTimesCity);
-  api.add('/purchase', ['POST'], controller.handlePurchase);
+  Router api = primaryRouter.child('/tickets')
+  ..add('/flight/{flight}', ['GET'], controller.handleFlightNumber)
+  ..add('/cities', ['GET'], controller.handleCities)
+  ..add('/times', ['POST'], controller.handleTimesCity)
+  ..add('/purchase', ['POST'], controller.handlePurchase);
 
-  // define Middlewares
+  printRoutes(api);
+
+  // print('${api.fullPaths}');
+
+
+  // create  Middlewares
   Middleware logreq = logRequests();
   Middleware corsMiddleWare = createMiddleware(
       requestHandler: reqHandler, responseHandler: respHandler);
 
   Pipeline pl = new Pipeline();
-  // add  corsMiddleWare and log  middleware to the chain
-  pl.addMiddleware(corsMiddleWare).addMiddleware(logreq);
+
+  // add  the corsMiddleWare and logreq  middlewares to the chain
+
+ //  pl.addMiddleware(corsMiddleWare).addMiddleware(logreq) ;
 
   // add echo middleware handler to the pipeline
   // Handler handler = pl.addHandler(echo);
@@ -88,13 +101,21 @@ void main() {
   // Middleware occurs on all HTTP occurences whereares a router handler
   // gets activated only if there is matching URI pattern
 
-  Handler apiHandler = pl.addHandler(primaryRouter.handler);
+  Handler application = primaryRouter.handler;
+
+  Handler apiHandler = pl
+    .addMiddleware(corsMiddleWare)
+    .addMiddleware(logreq)
+    .addHandler(application);
 
   // using multiple handlers
   // a cascade is a way to group multiple pipelines
   // a cascade will be executed as a FIFO queue
-  Cascade cc = new Cascade().add(apiHandler).add(fHandler);
-  io.serve(cc.handler, '0.0.0.0', 8080).then((server) {
+
+   Cascade cc = new Cascade().add(apiHandler).add(fHandler);
+
+
+  io.serve(cc.handler, '0.0.0.0', 8082).then((server) {
     print('serving at http://${server.address.host}:${server.port}');
   });
 }

@@ -45,8 +45,11 @@ class Deal {
 
 Future render() async {
 
+  // Get the Json file string
   String result = await HttpRequest.getString('deals.json');
+  // convert json file into dart Object
   JsonObject response = new JsonObject.fromJsonString(result);
+
   List dealVOs = response.deals;
 
   dealVOs.forEach((dealVO) {

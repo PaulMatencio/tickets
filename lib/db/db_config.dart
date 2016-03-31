@@ -2,7 +2,8 @@ import 'package:resource/resource.dart';
 
 class DbConfigValues {
   String dbName = 'Tickets';
-  String dbURI = 'mongodb://127.0.0.1:27017/';
+  // String dbURI = 'mongodb://127.0.0.1:27017/';
+  String dbURI = 'mongodb://127.0.0.1:10001/';
 
   /* A resource is data that can be located using a URI and read into
   * the program at runtime.

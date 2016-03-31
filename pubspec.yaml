@@ -14,8 +14,9 @@ dependencies:
   connection_pool: '0.1.0+2'
   dartson: '0.2.5'
   shelf: '>=0.6.5 <0.7.0'
-  shelf_static: '0.2.3+3'
-  shelf_route: '0.14.1'
+#shelf_static: '0.2.3+3'
+  mojito: '^0.6.4'
+#shelf_route: '0.14.1'
   shelf_path: '0.1.7'
   unittest: '<= 0.12.4'
 #client dependencies
